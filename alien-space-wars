@@ -1,1 +1,51 @@
 
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Site Comunitário de Jogos HTML</title>
+  <style>
+    body {
+      background:#0f1724;
+      color:#e6eef6;
+      font-family: Arial, sans-serif;
+      text-align:center;
+      padding:40px;
+    }
+    .card {
+      background:#0b1220;
+      border:1px solid #1e2940;
+      border-radius:10px;
+      padding:20px;
+      margin:15px auto;
+      max-width:360px;
+    }
+    a {
+      display:block;
+      margin-top:10px;
+      padding:10px;
+      background:#14b8a6;
+      color:#012;
+      text-decoration:none;
+      font-weight:bold;
+      border-radius:6px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🎮 Site Comunitário de Jogos HTML</h1>
+<p>Escolha um jogo abaixo:</p>
+
+<div class="card">
+  <strong>🚀 Alien Space Wars</strong>
+  <a href="games/alien-space-wars/">Jogar</a>
+</div>
+
+<div class="card">
+  <strong>👁️ Night Watch (FNAF)</strong>
+  <a href="games/fnaf-night-watch/">Jogar</a>
+</div>
+
+</body>
+</html>
