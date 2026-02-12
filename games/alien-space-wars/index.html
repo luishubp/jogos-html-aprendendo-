@@ -1,1 +1,151 @@
+<!DOCTYPE html><html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Neon Shift</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at top, #0a0a1a, #000);
+      color: #0ff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      background: #050510;
+      box-shadow: 0 0 20px #0ff;
+      border-radius: 12px;
+    }
+    #ui {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 30px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <div>Pontos: <span id="score">0</span></div>
+    <div>Neon Shift ⚡</div>
+  </div><canvas id="game" width="400" height="600"></canvas>
 
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.getElementById("score");
+
+    const player = {
+      x: 200,
+      y: 500,
+      width: 40,
+      height: 40,
+      speed: 6
+    };
+
+    let obstacles = [];
+    let score = 0;
+    let gameOver = false;
+
+    function drawPlayer() {
+      ctx.fillStyle = "#0ff";
+      ctx.shadowColor = "#0ff";
+      ctx.shadowBlur = 20;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+      ctx.shadowBlur = 0;
+    }
+
+    function createObstacle() {
+      const size = 30 + Math.random() * 20;
+      obstacles.push({
+        x: Math.random() * (canvas.width - size),
+        y: -size,
+        size,
+        speed: 3 + Math.random() * 3
+      });
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = "#f0f";
+      ctx.shadowColor = "#f0f";
+      ctx.shadowBlur = 15;
+      obstacles.forEach(o => {
+        ctx.fillRect(o.x, o.y, o.size, o.size);
+      });
+      ctx.shadowBlur = 0;
+    }
+
+    function updateObstacles() {
+      obstacles.forEach(o => o.y += o.speed);
+      obstacles = obstacles.filter(o => o.y < canvas.height + o.size);
+    }
+
+    function checkCollision() {
+      return obstacles.some(o =>
+        player.x < o.x + o.size &&
+        player.x + player.width > o.x &&
+        player.y < o.y + o.size &&
+        player.y + player.height > o.y
+      );
+    }
+
+    const keys = {};
+    window.addEventListener("keydown", e => keys[e.key] = true);
+    window.addEventListener("keyup", e => keys[e.key] = false);
+
+    function movePlayer() {
+      if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
+      if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += player.speed;
+    }
+
+    function drawGameOver() {
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#0ff";
+      ctx.font = "28px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
+      ctx.font = "18px Arial";
+      ctx.fillText("Recarregue para jogar novamente", canvas.width / 2, canvas.height / 2 + 20);
+    }
+
+    let spawnTimer = 0;
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!gameOver) {
+        movePlayer();
+        drawPlayer();
+        drawObstacles();
+        updateObstacles();
+
+        spawnTimer++;
+        if (spawnTimer > 40) {
+          createObstacle();
+          spawnTimer = 0;
+        }
+
+        if (checkCollision()) {
+          gameOver = true;
+        }
+
+        score++;
+        scoreEl.textContent = score;
+      } else {
+        drawPlayer();
+        drawObstacles();
+        drawGameOver();
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script></body>
+</html>
