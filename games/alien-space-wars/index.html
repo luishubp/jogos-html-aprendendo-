@@ -1,151 +1,86 @@
-<!DOCTYPE html><html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <title>Neon Shift</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: radial-gradient(circle at top, #0a0a1a, #000);
-      color: #0ff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    canvas {
-      background: #050510;
-      box-shadow: 0 0 20px #0ff;
-      border-radius: 12px;
-    }
-    #ui {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 30px;
-      font-size: 18px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Nightmare Fredbear - Gemini Version</title>
+    <style>
+        body { margin: 0; background: #050505; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        #quarto { width: 800px; height: 600px; background: linear-gradient(to bottom, #111, #000); position: relative; border: 5px solid #222; overflow: hidden; }
+        
+        /* A Porta */
+        #porta { width: 150px; height: 400px; background: #221a10; position: absolute; right: 50px; top: 100px; border: 4px solid #111; transition: 0.3s; z-index: 10; }
+        .porta-fechada { transform: scaleX(0.1); transform-origin: right; background: #000 !important; }
+
+        /* Nightmare Fredbear (Silhueta Sombria) */
+        #fredbear { width: 200px; height: 450px; position: absolute; right: 60px; top: 80px; display: none; filter: blur(2px); transition: 0.1s; }
+        .olhos { width: 100%; display: flex; justify-content: space-around; margin-top: 50px; }
+        .olho { width: 15px; height: 15px; background: #ff0000; border-radius: 50%; box-shadow: 0 0 20px #ff0000; animation: pulsar 0.5s infinite alternate; }
+        
+        @keyframes pulsar { from { opacity: 0.5; } to { opacity: 1; } }
+
+        /* HUD */
+        #instrucoes { position: absolute; bottom: 20px; left: 20px; color: #555; }
+        #mensagem { position: absolute; top: 20px; width: 100%; text-align: center; font-size: 24px; color: red; display: none; }
+    </style>
 </head>
 <body>
-  <div id="ui">
-    <div>Pontos: <span id="score">0</span></div>
-    <div>Neon Shift ⚡</div>
-  </div><canvas id="game" width="400" height="600"></canvas>
 
-  <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
-    const scoreEl = document.getElementById("score");
+<div id="quarto">
+    <div id="mensagem">MORREU!</div>
+    <div id="fredbear">
+        <div class="olhos">
+            <div class="olho"></div>
+            <div class="olho"></div>
+        </div>
+        <div style="width: 80px; height: 40px; border-bottom: 5px solid white; margin: 40px auto; opacity: 0.3;"></div>
+    </div>
+    <div id="porta"></div>
+    <div id="instrucoes">ESPAÇO: Fechar Porta | Tente sobreviver...</div>
+</div>
 
-    const player = {
-      x: 200,
-      y: 500,
-      width: 40,
-      height: 40,
-      speed: 6
-    };
+<script>
+    const porta = document.getElementById('porta');
+    const fredbear = document.getElementById('fredbear');
+    const mensagem = document.getElementById('mensagem');
+    let portaFechada = false;
+    let fredbearAtacando = false;
 
-    let obstacles = [];
-    let score = 0;
-    let gameOver = false;
-
-    function drawPlayer() {
-      ctx.fillStyle = "#0ff";
-      ctx.shadowColor = "#0ff";
-      ctx.shadowBlur = 20;
-      ctx.fillRect(player.x, player.y, player.width, player.height);
-      ctx.shadowBlur = 0;
-    }
-
-    function createObstacle() {
-      const size = 30 + Math.random() * 20;
-      obstacles.push({
-        x: Math.random() * (canvas.width - size),
-        y: -size,
-        size,
-        speed: 3 + Math.random() * 3
-      });
-    }
-
-    function drawObstacles() {
-      ctx.fillStyle = "#f0f";
-      ctx.shadowColor = "#f0f";
-      ctx.shadowBlur = 15;
-      obstacles.forEach(o => {
-        ctx.fillRect(o.x, o.y, o.size, o.size);
-      });
-      ctx.shadowBlur = 0;
-    }
-
-    function updateObstacles() {
-      obstacles.forEach(o => o.y += o.speed);
-      obstacles = obstacles.filter(o => o.y < canvas.height + o.size);
-    }
-
-    function checkCollision() {
-      return obstacles.some(o =>
-        player.x < o.x + o.size &&
-        player.x + player.width > o.x &&
-        player.y < o.y + o.size &&
-        player.y + player.height > o.y
-      );
-    }
-
-    const keys = {};
-    window.addEventListener("keydown", e => keys[e.key] = true);
-    window.addEventListener("keyup", e => keys[e.key] = false);
-
-    function movePlayer() {
-      if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
-      if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += player.speed;
-    }
-
-    function drawGameOver() {
-      ctx.fillStyle = "rgba(0,0,0,0.6)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#0ff";
-      ctx.font = "28px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
-      ctx.font = "18px Arial";
-      ctx.fillText("Recarregue para jogar novamente", canvas.width / 2, canvas.height / 2 + 20);
-    }
-
-    let spawnTimer = 0;
-
-    function gameLoop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (!gameOver) {
-        movePlayer();
-        drawPlayer();
-        drawObstacles();
-        updateObstacles();
-
-        spawnTimer++;
-        if (spawnTimer > 40) {
-          createObstacle();
-          spawnTimer = 0;
+    // Lógica da Porta
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            portaFechada = true;
+            porta.classList.add('porta-fechada');
         }
+    });
 
-        if (checkCollision()) {
-          gameOver = true;
+    window.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') {
+            portaFechada = false;
+            porta.classList.remove('porta-fechada');
         }
+    });
 
-        score++;
-        scoreEl.textContent = score;
-      } else {
-        drawPlayer();
-        drawObstacles();
-        drawGameOver();
-      }
-
-      requestAnimationFrame(gameLoop);
+    // Ciclo do Fredbear
+    function spawnFredbear() {
+        if (Math.random() > 0.7 && !fredbearAtacando) {
+            fredbear.style.display = 'block';
+            fredbearAtacando = true;
+            
+            // Tempo para o jogador reagir
+            setTimeout(() => {
+                if (!portaFechada) {
+                    mensagem.style.display = 'block';
+                    document.body.style.background = 'red';
+                } else {
+                    fredbear.style.display = 'none';
+                    fredbearAtacando = false;
+                }
+            }, 1500);
+        }
     }
 
-    gameLoop();
-  </script></body>
+    setInterval(spawnFredbear, 3000);
+</script>
+
+</body>
 </html>
