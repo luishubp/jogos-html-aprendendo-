@@ -1,86 +1,371 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Nightmare Fredbear - Gemini Version</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Defense - Teste</title>
     <style>
-        body { margin: 0; background: #050505; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        #quarto { width: 800px; height: 600px; background: linear-gradient(to bottom, #111, #000); position: relative; border: 5px solid #222; overflow: hidden; }
-        
-        /* A Porta */
-        #porta { width: 150px; height: 400px; background: #221a10; position: absolute; right: 50px; top: 100px; border: 4px solid #111; transition: 0.3s; z-index: 10; }
-        .porta-fechada { transform: scaleX(0.1); transform-origin: right; background: #000 !important; }
-
-        /* Nightmare Fredbear (Silhueta Sombria) */
-        #fredbear { width: 200px; height: 450px; position: absolute; right: 60px; top: 80px; display: none; filter: blur(2px); transition: 0.1s; }
-        .olhos { width: 100%; display: flex; justify-content: space-around; margin-top: 50px; }
-        .olho { width: 15px; height: 15px; background: #ff0000; border-radius: 50%; box-shadow: 0 0 20px #ff0000; animation: pulsar 0.5s infinite alternate; }
-        
-        @keyframes pulsar { from { opacity: 0.5; } to { opacity: 1; } }
-
-        /* HUD */
-        #instrucoes { position: absolute; bottom: 20px; left: 20px; color: #555; }
-        #mensagem { position: absolute; top: 20px; width: 100%; text-align: center; font-size: 24px; color: red; display: none; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1a1a1a;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            position: relative;
+            border: 3px solid #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        #gameCanvas {
+            background-color: #87CEEB;
+            display: block;
+        }
+        #infoPanel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background-color: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 6px;
+            z-index: 10;
+        }
+        #towersPanel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 6px;
+            color: white;
+            z-index: 10;
+        }
+        .torreBtn {
+            display: block;
+            width: 120px;
+            padding: 8px;
+            margin: 5px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .torreBtn:hover {
+            background-color: #45a049;
+        }
+        #startWave {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+        }
+        #startWave:hover {
+            background-color: #cc0000;
+        }
     </style>
 </head>
 <body>
-
-<div id="quarto">
-    <div id="mensagem">MORREU!</div>
-    <div id="fredbear">
-        <div class="olhos">
-            <div class="olho"></div>
-            <div class="olho"></div>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <div id="infoPanel">
+            <h3>🛡️ Tower Defense</h3>
+            <p>Vida: <span id="vida">20</span> ❤️</p>
+            <p>Dinheiro: R$<span id="dinheiro">300</span> 💸</p>
+            <p>Onda: <span id="onda">1</span> 🌊</p>
         </div>
-        <div style="width: 80px; height: 40px; border-bottom: 5px solid white; margin: 40px auto; opacity: 0.3;"></div>
+        <div id="towersPanel">
+            <h4>Escolha sua Torre:</h4>
+            <button class="torreBtn" data-tipo="basica">Básica - R$100</button>
+            <button class="torreBtn" data-tipo="rápida">Rápida - R$150</button>
+            <button class="torreBtn" data-tipo="forte">Forte - R$250</button>
+        </div>
+        <button id="startWave">INICIAR ONDA 🚀</button>
     </div>
-    <div id="porta"></div>
-    <div id="instrucoes">ESPAÇO: Fechar Porta | Tente sobreviver...</div>
-</div>
 
-<script>
-    const porta = document.getElementById('porta');
-    const fredbear = document.getElementById('fredbear');
-    const mensagem = document.getElementById('mensagem');
-    let portaFechada = false;
-    let fredbearAtacando = false;
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-    // Lógica da Porta
-    window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space') {
-            portaFechada = true;
-            porta.classList.add('porta-fechada');
-        }
-    });
+        // Variáveis do Jogo
+        let vida = 20;
+        let dinheiro = 300;
+        let ondaAtual = 1;
+        let inimigos = [];
+        let torres = [];
+        let projeteis = [];
+        let ondaEmAndamento = false;
+        let tipoTorreSelecionada = null;
 
-    window.addEventListener('keyup', (e) => {
-        if (e.code === 'Space') {
-            portaFechada = false;
-            porta.classList.remove('porta-fechada');
-        }
-    });
+        // Caminho dos inimigos
+        const caminho = [
+            {x:0, y:100}, {x:200, y:100}, {x:200, y:300},
+            {x:400, y:300}, {x:400, y:200}, {x:600, y:200},
+            {x:600, y:400}, {x:800, y:400}
+        ];
 
-    // Ciclo do Fredbear
-    function spawnFredbear() {
-        if (Math.random() > 0.7 && !fredbearAtacando) {
-            fredbear.style.display = 'block';
-            fredbearAtacando = true;
-            
-            // Tempo para o jogador reagir
-            setTimeout(() => {
-                if (!portaFechada) {
-                    mensagem.style.display = 'block';
-                    document.body.style.background = 'red';
+        // Classe Inimigo
+        class Inimigo {
+            constructor(vida, velocidade, cor, recompensa) {
+                this.x = caminho[0].x;
+                this.y = caminho[0].y;
+                this.vida = vida;
+                this.vidaMax = vida;
+                this.velocidade = velocidade;
+                this.cor = cor;
+                this.recompensa = recompensa;
+                this.indiceCaminho = 1;
+                this.ativo = true;
+            }
+
+            atualizar() {
+                if (!this.ativo) return;
+
+                const alvo = caminho[this.indiceCaminho];
+                const dx = alvo.x - this.x;
+                const dy = alvo.y - this.y;
+                const distancia = Math.sqrt(dx*dx + dy*dy);
+
+                if (distancia < this.velocidade) {
+                    this.x = alvo.x;
+                    this.y = alvo.y;
+                    this.indiceCaminho++;
+                    if (this.indiceCaminho >= caminho.length) {
+                        this.ativo = false;
+                        vida--;
+                        return;
+                    }
                 } else {
-                    fredbear.style.display = 'none';
-                    fredbearAtacando = false;
+                    this.x += (dx/distancia) * this.velocidade;
+                    this.y += (dy/distancia) * this.velocidade;
                 }
-            }, 1500);
+            }
+
+            desenhar() {
+                ctx.fillStyle = this.cor;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 12, 0, Math.PI*2);
+                ctx.fill();
+
+                // Barra de Vida
+                ctx.fillStyle = 'red';
+                ctx.fillRect(this.x - 15, this.y - 20, 30, 4);
+                ctx.fillStyle = 'lime';
+                ctx.fillRect(this.x - 15, this.y - 20, 30 * (this.vida / this.vidaMax), 4);
+            }
         }
-    }
 
-    setInterval(spawnFredbear, 3000);
-</script>
+        // Classe Torre
+        class Torre {
+            constructor(x, y, tipo) {
+                this.x = x;
+                this.y = y;
+                this.tipo = tipo;
+                this.alvo = null;
+                this.tempoTiro = 0;
 
+                if (tipo === 'basica') {
+                    this.dano = 10;
+                    this.alcance = 120;
+                    this.velocidadeTiro = 40;
+                    this.cor = '#3366ff';
+                } else if (tipo === 'rápida') {
+                    this.dano = 5;
+                    this.alcance = 100;
+                    this.velocidadeTiro = 15;
+                    this.cor = '#33cc33';
+                } else if (tipo === 'forte') {
+                    this.dano = 30;
+                    this.alcance = 150;
+                    this.velocidadeTiro = 80;
+                    this.cor = '#ff3300';
+                }
+            }
+
+            atualizar() {
+                this.tempoTiro++;
+                this.buscarAlvo();
+                if (this.alvo && this.tempoTiro >= this.velocidadeTiro) {
+                    this.atirar();
+                    this.tempoTiro = 0;
+                }
+            }
+
+            buscarAlvo() {
+                let menorDistancia = Infinity;
+                this.alvo = null;
+                inimigos.forEach(ini => {
+                    if (!ini.ativo) return;
+                    const d = Math.hypot(ini.x - this.x, ini.y - this.y);
+                    if (d < this.alcance && d < menorDistancia) {
+                        menorDistancia = d;
+                        this.alvo = ini;
+                    }
+                });
+            }
+
+            atirar() {
+                projeteis.push({
+                    x: this.x, y: this.y,
+                    alvo: this.alvo,
+                    dano: this.dano,
+                    cor: this.cor
+                });
+            }
+
+            desenhar() {
+                ctx.fillStyle = this.cor;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 16, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x - 8, this.y);
+                ctx.lineTo(this.x + 8, this.y);
+                ctx.moveTo(this.x, this.y - 8);
+                ctx.lineTo(this.x, this.y + 8);
+                ctx.stroke();
+
+                // Alcance
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.alcance, 0, Math.PI*2);
+                ctx.stroke();
+            }
+        }
+
+        // Função iniciar onda
+        function iniciarOnda() {
+            if (ondaEmAndamento) return;
+            ondaEmAndamento = true;
+            const qtd = 5 + (ondaAtual * 3);
+            for (let i = 0; i < qtd; i++) {
+                setTimeout(() => {
+                    if (ondaAtual <= 3) inimigos.push(new Inimigo(20 + ondaAtual*5, 1.2, 'purple', 15));
+                    else if (ondaAtual <=6) inimigos.push(new Inimigo(40 + ondaAtual*8, 1.5, 'red', 25));
+                    else inimigos.push(new Inimigo(70 + ondaAtual*10, 1.0, 'black', 40));
+                }, i * 800);
+            }
+            ondaAtual++;
+        }
+
+        // Clique para colocar torre
+        canvas.addEventListener('click', (e) => {
+            if (!tipoTorreSelecionada) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            let custo = tipoTorreSelecionada === 'basica' ? 100 : tipoTorreSelecionada === 'rápida' ? 150 : 250;
+            if (dinheiro >= custo) {
+                torres.push(new Torre(x, y, tipoTorreSelecionada));
+                dinheiro -= custo;
+            } else {
+                alert('💸 Dinheiro insuficiente!');
+            }
+            tipoTorreSelecionada = null;
+        });
+
+        // Selecionar tipo de torre
+        document.querySelectorAll('.torreBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                tipoTorreSelecionada = btn.dataset.tipo;
+            });
+        });
+
+        document.getElementById('startWave').addEventListener('click', iniciarOnda);
+
+        // Loop do jogo
+        function loop() {
+            // Limpar tela
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+
+            // Desenhar caminho
+            ctx.strokeStyle = '#5a3e1b';
+            ctx.lineWidth = 40;
+            ctx.beginPath();
+            ctx.moveTo(caminho[0].x, caminho[0].y);
+            for (let p of caminho) ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            ctx.lineWidth = 1;
+
+            // Atualizar e desenhar inimigos
+            let todosMortos = true;
+            inimigos.forEach(ini => {
+                ini.atualizar();
+                ini.desenhar();
+                if (ini.ativo) todosMortos = false;
+                else if (ini.vida <= 0) {
+                    dinheiro += ini.recompensa;
+                }
+            });
+
+            if (todosMortos && ondaEmAndamento && inimigos.every(i => !i.ativo)) {
+                ondaEmAndamento = false;
+            }
+
+            // Atualizar torres
+            torres.forEach(t => {
+                t.atualizar();
+                t.desenhar();
+            });
+
+            // Processar projéteis
+            projeteis.forEach((p, i) => {
+                if (!p.alvo.ativo) { projeteis.splice(i,1); return; }
+                const dx = p.alvo.x - p.x;
+                const dy = p.alvo.y - p.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 8) {
+                    p.alvo.vida -= p.dano;
+                    projeteis.splice(i,1);
+                    if (p.alvo.vida <=0) p.alvo.ativo = false;
+                } else {
+                    p.x += (dx/dist)*6;
+                    p.y += (dy/dist)*6;
+                }
+                ctx.fillStyle = p.cor;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 5, 0, Math.PI*2);
+                ctx.fill();
+            });
+
+            // Atualizar Interface
+            document.getElementById('vida').textContent = vida;
+            document.getElementById('dinheiro').textContent = dinheiro;
+            document.getElementById('onda').textContent = ondaAtual;
+
+            if (vida <=0) {
+                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.fillRect(0,0,canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '40px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2);
+                ctx.font = '20px Arial';
+                ctx.fillText(`Chegou na onda ${ondaAtual-1}`, canvas.width/2, canvas.height/2 + 50);
+                return;
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
 </body>
 </html>
