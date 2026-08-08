@@ -1,109 +1,554 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>🎮 Hub de Jogos HTML</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 Hub Jogos</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🎮</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --laranja: #f97316; --laranja-vivo: #fb923c; --laranja-escuro: #ea580c;
+    --laranja-glow: rgba(249,115,22,0.3); --fundo: #0a0a0a; --fundo2: #111111;
+    --fundo3: #1a1a1a; --borda: #2a2a2a; --texto: #f1f0ef; --texto-muted: #6b6b6b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Barlow', sans-serif; background: var(--fundo); color: var(--texto); min-height: 100vh; }
 
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* ── HEADER ─────────────────────────────────────────────────── */
+  header { position: fixed; top: 0; left: 0; width: 100%; background: rgba(10,10,10,0.97); backdrop-filter: blur(14px); border-bottom: 1px solid var(--borda); z-index: 1000; height: 58px; display: flex; align-items: center; padding: 0 24px; gap: 0; }
+  .logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--texto); text-decoration: none; display: flex; align-items: center; gap: 7px; flex-shrink: 0; margin-right: 32px; }
+  .logo span { color: var(--laranja); }
+  .nav-links { display: flex; align-items: center; gap: 4px; flex: 1; }
+  .nav-link { padding: 6px 14px; border-radius: 6px; background: none; border: none; color: var(--texto-muted); font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; transition: color 0.2s; white-space: nowrap; }
+  .nav-link:hover { color: var(--texto); }
+  .nav-link.vip-link { background: var(--laranja); color: #000 !important; font-weight: 800; border-radius: 99px; padding: 5px 16px; }
+  .nav-link.active { color: var(--texto); text-decoration: underline; text-decoration-color: var(--laranja); text-underline-offset: 4px; }
 
-    body {
-      min-height: 100vh;
-      background: radial-gradient(circle at top, #0f1724, #020617);
-      color: #e5e7eb;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+  .nav-icons { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .search-wrap { position: relative; display: flex; align-items: center; margin-right: 8px; }
+  #search-input { width: 0; opacity: 0; padding: 6px 0; border: none; border-bottom: 1px solid transparent; background: transparent; color: var(--texto); font-family: 'Barlow', sans-serif; font-size: 13px; outline: none; transition: width 0.3s, opacity 0.3s, border-color 0.3s, padding 0.3s; }
+  #search-input.open { width: 160px; opacity: 1; padding: 6px 8px; border-color: var(--laranja); }
+  #search-input::placeholder { color: var(--texto-muted); }
 
-    .container {
-      width: 100%;
-      max-width: 900px;
-      padding: 40px 20px;
-      text-align: center;
-    }
+  .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--fundo3); border: 1px solid var(--borda); color: var(--texto-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.2s, color 0.2s; font-size: 16px; text-decoration: none; position: relative; flex-shrink: 0; }
+  .icon-btn:hover { border-color: var(--laranja); color: var(--texto); }
 
-    h1 {
-      font-size: 2.8rem;
-      margin-bottom: 10px;
-      background: linear-gradient(90deg, #22d3ee, #14b8a6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+  /* Badge notificação */
+  .notif-badge { position: absolute; top: -4px; right: -4px; background: var(--laranja); color: #000; font-size: 9px; font-weight: 800; border-radius: 99px; padding: 1px 5px; min-width: 16px; text-align: center; border: 1.5px solid var(--fundo); display: none; }
+  .notif-badge.show { display: block; }
 
-    p {
-      color: #9ca3af;
-      margin-bottom: 40px;
-    }
+  /* ── DROPDOWN NOTIFICAÇÕES ───────────────────────────────────── */
+  .notif-container { position: relative; }
+  .notif-dropdown {
+    display: none; position: absolute; right: 0; top: calc(100% + 10px);
+    background: var(--fundo2); border: 1px solid var(--borda);
+    border-radius: 12px; min-width: 300px; max-height: 400px;
+    overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+    z-index: 1000; animation: fadeDown 0.2s ease;
+  }
+  .notif-dropdown.show { display: block; }
+  .notif-header { padding: 14px 16px; border-bottom: 1px solid var(--borda); display: flex; justify-content: space-between; align-items: center; }
+  .notif-header h4 { font-size: 13px; font-weight: 700; }
+  .btn-marcar-lidas { background: none; border: none; color: var(--laranja); font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Barlow', sans-serif; }
+  .notif-item { padding: 12px 16px; border-bottom: 1px solid var(--borda); display: flex; align-items: flex-start; gap: 10px; transition: background 0.15s; }
+  .notif-item:hover { background: var(--fundo3); }
+  .notif-item.nao-lida { background: rgba(249,115,22,0.05); border-left: 3px solid var(--laranja); }
+  .notif-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--fundo3); flex-shrink: 0; }
+  .notif-texto { font-size: 12px; color: var(--texto-muted); line-height: 1.4; }
+  .notif-texto strong { color: var(--texto); }
+  .notif-tempo { font-size: 10px; color: var(--texto-muted); margin-top: 3px; }
+  .notif-vazio { padding: 24px; text-align: center; color: var(--texto-muted); font-size: 13px; }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 25px;
-    }
+  /* Avatar btn */
+  .avatar-btn { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; border-radius: 99px; background: var(--fundo3); border: 1px solid var(--borda); cursor: pointer; transition: border-color 0.2s; flex-shrink: 0; margin-left: 4px; }
+  .avatar-btn:hover { border-color: var(--laranja); }
+  #user-photo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: none; background: var(--laranja); border: 2px solid var(--laranja); flex-shrink: 0; }
+  .avatar-inicial { width: 28px; height: 28px; border-radius: 50%; background: var(--laranja); color: #000; font-weight: 800; font-size: 13px; display: none; align-items: center; justify-content: center; flex-shrink: 0; }
+  .avatar-chevron { color: var(--texto-muted); font-size: 10px; transition: transform 0.2s; }
+  .avatar-btn.open .avatar-chevron { transform: rotate(180deg); }
 
-    .card {
-      background: linear-gradient(180deg, #0b1220, #020617);
-      border: 1px solid #1e293b;
-      border-radius: 16px;
-      padding: 25px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
+  /* Dropdown perfil */
+  .profile-container { position: relative; }
+  .dropdown { display: none; position: absolute; right: 0; top: calc(100% + 10px); background: var(--fundo2); border: 1px solid var(--borda); border-radius: 12px; min-width: 240px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.7); z-index: 1000; animation: fadeDown 0.2s ease; }
+  .dropdown.show { display: block; }
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+  .drop-header { padding: 14px 16px; border-bottom: 1px solid var(--borda); background: var(--fundo3); display: flex; align-items: center; gap: 12px; }
+  .drop-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: var(--laranja); border: 2px solid var(--laranja); flex-shrink: 0; }
+  .drop-info p { font-size: 14px; font-weight: 700; }
+  .drop-info small { font-size: 11px; color: var(--texto-muted); }
+  .drop-xp { padding: 10px 16px; border-bottom: 1px solid var(--borda); display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .drop-xp-label { color: var(--texto-muted); white-space: nowrap; }
+  .drop-xp-bar-bg { flex: 1; height: 4px; background: var(--fundo3); border-radius: 99px; overflow: hidden; }
+  .drop-xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--laranja-escuro), var(--laranja-vivo)); border-radius: 99px; transition: width 0.8s ease; width: 0%; }
+  .drop-xp-pct { color: var(--laranja); white-space: nowrap; min-width: 28px; text-align: right; }
+  .drop-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: var(--texto-muted); text-decoration: none; font-size: 13px; font-weight: 600; transition: background 0.15s, color 0.15s; }
+  .drop-link:hover { background: var(--fundo3); color: var(--texto); }
+  .drop-link.destaque { color: var(--laranja); }
+  .drop-bastidores { padding: 12px 16px; border-top: 1px solid var(--borda); border-bottom: 1px solid var(--borda); background: var(--fundo3); }
+  .drop-bastidores h4 { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--laranja); margin-bottom: 8px; }
+  .drop-bastidores ul { list-style: none; }
+  .drop-bastidores li { font-size: 12px; color: var(--texto-muted); padding: 3px 0; display: flex; align-items: center; gap: 7px; }
+  #btn-logout { display: block; width: 100%; padding: 12px 16px; background: none; border: none; color: #ef4444; font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 700; text-align: left; cursor: pointer; transition: background 0.15s; }
+  #btn-logout:hover { background: rgba(239,68,68,0.08); }
 
-    .card:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-    }
+  /* Light mode */
+  body.light { background: #f5f5f5; color: #111; }
+  body.light header { background: rgba(255,255,255,0.97); border-color: #e0e0e0; }
+  body.light .nav-link { color: #555; }
+  body.light .nav-link:hover { color: #111; }
+  body.light .icon-btn { background: #f0f0f0; border-color: #ddd; color: #555; }
+  body.light .avatar-btn { background: #f0f0f0; border-color: #ddd; }
+  body.light .card { background: #fff; border-color: #e5e5e5; color: #111; }
+  body.light .card .card-desc { color: #666; }
+  body.light .dropdown, body.light .notif-dropdown { background: #fff; border-color: #e5e5e5; }
+  body.light .drop-header, body.light .drop-bastidores, body.light .notif-header { background: #f5f5f5; }
+  body.light .drop-link { color: #555; }
+  body.light .drop-link:hover { background: #f0f0f0; color: #111; }
 
-    .icon { font-size: 3rem; margin-bottom: 10px; }
-    .title { font-size: 1.3rem; margin-bottom: 10px; }
-    .desc { font-size: 0.95rem; color: #9ca3af; margin-bottom: 20px; }
+  /* ── CONTAINER ───────────────────────────────────────────────── */
+  .container { padding: 82px 24px 60px; max-width: 1200px; margin: 0 auto; }
 
-    a {
-      display: inline-block;
-      padding: 12px 20px;
-      border-radius: 10px;
-      background: linear-gradient(90deg, #14b8a6, #22d3ee);
-      color: #020617;
-      font-weight: bold;
-      text-decoration: none;
-    }
+  /* Hero */
+  .hero { margin-bottom: 32px; padding: 28px 32px; background: linear-gradient(135deg, #1a0800, #2d1200); border: 1px solid #3d1f00; border-radius: 16px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 0% 50%, rgba(249,115,22,0.2) 0%, transparent 60%); }
+  .hero-content { position: relative; }
+  .hero h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 2.2rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; line-height: 1.1; }
+  .hero h2 span { color: var(--laranja); }
+  .hero p { color: var(--texto-muted); font-size: 14px; margin-top: 6px; }
+  .hero-decor { position: absolute; right: 32px; top: 50%; transform: translateY(-50%); font-size: 5rem; opacity: 0.12; pointer-events: none; }
 
-    footer {
-      margin-top: 40px;
-      font-size: 0.8rem;
-      color: #6b7280;
-    }
-  </style>
+  /* Filtros */
+  .filtros { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .cat-btn { padding: 7px 18px; border-radius: 99px; border: 1px solid var(--borda); background: transparent; color: var(--texto-muted); font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+  .cat-btn:hover { border-color: var(--laranja); color: var(--texto); }
+  .cat-btn.active { background: var(--laranja); border-color: var(--laranja); color: #000; }
+
+  /* Grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+  .card { background: var(--fundo2); border: 1px solid var(--borda); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s; position: relative; overflow: hidden; }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--laranja-escuro), var(--laranja-vivo)); opacity: 0; transition: opacity 0.25s; }
+  .card:hover { transform: translateY(-6px); border-color: var(--laranja); box-shadow: 0 12px 32px rgba(249,115,22,0.15); }
+  .card:hover::before { opacity: 1; }
+  .card.futuro-jogo { opacity: 0.5; border-style: dashed; }
+  .card.futuro-jogo:hover { transform: none; border-color: var(--borda); box-shadow: none; }
+  .card.futuro-jogo::before { display: none; }
+  .card-icon { font-size: 2.8rem; margin-bottom: 12px; display: block; }
+  .card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .card-desc { font-size: 13px; color: var(--texto-muted); margin-bottom: 20px; flex-grow: 1; line-height: 1.5; }
+  .card-footer { display: flex; align-items: center; gap: 10px; }
+  .btn-jogar { flex: 1; display: inline-block; padding: 10px 18px; background: linear-gradient(90deg, var(--laranja-escuro), var(--laranja-vivo)); color: #000; text-decoration: none; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 8px; text-align: center; border: none; cursor: pointer; transition: opacity 0.2s, transform 0.1s; box-shadow: 0 4px 14px rgba(249,115,22,0.3); }
+  .btn-jogar:hover { opacity: 0.9; transform: scale(1.02); }
+  .btn-disabled { flex: 1; padding: 10px 18px; background: var(--fundo3); color: var(--texto-muted); font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 8px; border: 1px solid var(--borda); cursor: not-allowed; }
+  .fav-btn { background: none; border: 1px solid var(--borda); border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: border-color 0.2s, transform 0.2s; flex-shrink: 0; }
+  .fav-btn:hover { border-color: var(--laranja); transform: scale(1.1); }
+  .fav-btn.active { border-color: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,0.3); }
+
+  footer { text-align: center; padding: 24px; font-size: 12px; color: var(--texto-muted); border-top: 1px solid var(--borda); margin-top: 40px; }
+  .vip-name { color: #f59e0b !important; text-shadow: 0 0 10px rgba(245,158,11,0.5); }
+
+  #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--fundo3); border: 1px solid var(--laranja); color: var(--texto); padding: 12px 24px; border-radius: 8px; font-size: 13px; font-weight: 700; z-index: 9999; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; white-space: nowrap; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media(max-width: 768px) {
+    header { padding: 0 14px; gap: 8px; }
+    .nav-links { gap: 0; }
+    .nav-link { padding: 6px 10px; font-size: 12px; }
+    .logo { margin-right: 12px; font-size: 1.2rem; }
+    .container { padding-top: 76px; }
+    .hero { padding: 20px; }
+    .hero h2 { font-size: 1.6rem; }
+    .hero-decor { display: none; }
+    .dropdown, .notif-dropdown { right: 0; min-width: 260px; }
+    #search-input.open { width: 120px; }
+  }
+</style>
 </head>
-
 <body>
-  <div class="container">
-    <h1>🎮 Hub de Jogos HTML</h1>
-    <p>Escolha um jogo e divirta-se direto no navegador</p>
 
-    <div class="grid">
-      <div class="card">
-        <div class="icon">🚀</div>
-        <div class="title">Alien Space Wars</div>
-        <div class="desc">Shooter espacial clássico com naves e explosões</div>
-        <a href="./games/alien-space-wars/">Jogar</a>
-      </div>
+<header>
+  <a class="logo" href="index.html">🎮 Hub <span>Jogos</span></a>
+  <nav class="nav-links">
+    <a href="index.html"      class="nav-link active">Home</a>
+    <a href="comunidade.html" class="nav-link">Comunidade</a>
+    <a href="vip.html"        class="nav-link vip-link">VIP</a>
+    <a href="loja.html"       class="nav-link">Loja</a>
+  </nav>
 
-      <div class="card">
-        <div class="icon">👁️</div>
-        <div class="title">Night Watch (FNAF)</div>
-        <div class="desc">Sobreviva à noite monitorando câmeras e portas</div>
-        <a href="./games/fnaf-night-watch/">Jogar</a>
+  <div class="nav-icons">
+    <!-- Busca -->
+    <div class="search-wrap">
+      <input type="text" id="search-input" placeholder="Buscar jogos...">
+      <button class="icon-btn" id="btn-search">🔎</button>
+    </div>
+
+    <!-- Discord -->
+    <a href="https://discord.gg/SEU_DISCORD" target="_blank" class="icon-btn" title="Discord">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+      </svg>
+    </a>
+
+    <!-- Notificações -->
+    <div class="notif-container">
+      <button class="icon-btn" id="btn-notif" title="Notificações">
+        🔔
+        <span class="notif-badge" id="notif-badge">0</span>
+      </button>
+      <div class="notif-dropdown" id="notif-dropdown">
+        <div class="notif-header">
+          <h4>🔔 Notificações</h4>
+          <button class="btn-marcar-lidas" id="btn-marcar-lidas">Marcar todas como lidas</button>
+        </div>
+        <div id="notif-lista"><div class="notif-vazio">Nenhuma notificação ainda.</div></div>
       </div>
     </div>
 
-    <footer>
-      Feito com HTML + JavaScript • GitHub Pages
-    </footer>
+    <!-- Perfil -->
+    <div class="profile-container">
+      <div class="avatar-btn" id="btn-login">
+        <img id="user-photo" src="" alt="">
+        <div class="avatar-inicial" id="avatar-inicial"></div>
+        <span class="avatar-chevron">▼</span>
+      </div>
+      <div id="drop-menu" class="dropdown">
+        <div class="drop-header">
+          <img class="drop-avatar" id="drop-avatar" src="" alt="">
+          <div class="drop-info">
+            <p id="menu-user-hello">Olá!</p>
+            <small id="drop-nivel">⚡ Nível 1 — 0 XP</small>
+          </div>
+        </div>
+        <div class="drop-xp">
+          <span class="drop-xp-label">XP</span>
+          <div class="drop-xp-bar-bg"><div class="drop-xp-bar-fill" id="drop-xp-bar"></div></div>
+          <span class="drop-xp-pct" id="drop-xp-pct">0%</span>
+        </div>
+        <a href="perfil.html"  class="drop-link destaque">👤 Editar Perfil</a>
+        <a href="vip.html"     class="drop-link">🏅 Seja VIP</a>
+        <a href="https://ko-fi.com/TEU_USER" target="_blank" class="drop-link">☕ Apoiar</a>
+        <div class="drop-bastidores">
+          <h4>🌑 Acesso exclusivo MidNight</h4>
+          <ul>
+            <li>🛠️ Diário de Desenvolvimento</li>
+            <li>🎨 Arte Conceitual</li>
+            <li>🗳️ Votação de Enquetes</li>
+            <li>🚀 Acesso Antecipado</li>
+          </ul>
+        </div>
+        <button id="btn-logout">🚪 Sair da Conta</button>
+      </div>
+    </div>
+
+    <button class="icon-btn" id="toggle-theme" title="Tema">🌙</button>
   </div>
+</header>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-content">
+      <h2><span>Mergulhe</span> nos<br>melhores jogos</h2>
+      <p>Jogos HTML direto no navegador — sem instalação, sem enrolação.</p>
+    </div>
+    <div class="hero-decor">🎮</div>
+  </div>
+
+  <div class="filtros">
+    <button class="cat-btn active" data-category="all">Todos</button>
+    <button class="cat-btn" data-category="acao">Ação</button>
+    <button class="cat-btn" data-category="terror">Terror</button>
+  </div>
+
+  <div class="grid" id="game-grid">
+    <div class="card" data-category="acao" data-id="alien-space">
+      <span class="card-icon">🚀</span>
+      <div class="card-title">Alien Space Wars</div>
+      <div class="card-desc">Shooter espacial clássico com naves e explosões. Destrua tudo que aparecer.</div>
+      <div class="card-footer">
+        <a href="./games/alien-space-wars/" class="btn-jogar">Jogar</a>
+        <button class="fav-btn">🤍</button>
+      </div>
+    </div>
+    <div class="card" data-category="terror" data-id="fnaf-watch">
+      <span class="card-icon">👁️</span>
+      <div class="card-title">FNAF Night Watch</div>
+      <div class="card-desc">Sobreviva à noite monitorando câmeras e portas. Eles estão vindo.</div>
+      <div class="card-footer">
+        <a href="./games/fnaf-night-watch/" class="btn-jogar">Jogar</a>
+        <button class="fav-btn">🤍</button>
+      </div>
+    </div>
+    <div class="card" data-category="terror" data-id="fazenda-velho">
+      <span class="card-icon">🚜</span>
+      <div class="card-title">Fazenda Velho Moço</div>
+      <div class="card-desc">Tente sobreviver à criatura que aparece à noite na fazenda abandonada.</div>
+      <div class="card-footer">
+        <a href="./games/novo-experimento/" class="btn-jogar">Jogar</a>
+        <button class="fav-btn">🤍</button>
+      </div>
+    </div>
+    <div class="card futuro-jogo" data-category="futuro" data-id="manutencao">
+      <span class="card-icon">🔧</span>
+      <div class="card-title">Em Manutenção</div>
+      <div class="card-desc">Voltaremos em breve. Obrigado pela paciência! 💙</div>
+      <div class="card-footer"><button class="btn-disabled" disabled>Em breve</button></div>
+    </div>
+  </div>
+</div>
+
+<footer>Feito com 🧡 para GitHub Pages + Firebase</footer>
+<div id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import {
+    getFirestore, doc, setDoc, getDoc, updateDoc,
+    collection, query, orderBy, limit, onSnapshot, writeBatch
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyALp8QDfjyjGQDfaJuVjEEv_mBhnylHUj8",
+    authDomain: "meuhubdejogos.firebaseapp.com",
+    projectId: "meuhubdejogos",
+    storageBucket: "meuhubdejogos.firebasestorage.app",
+    messagingSenderId: "485191017245",
+    appId: "1:485191017245:web:06c2ea7c5aa8f01472b7f4"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  const CAMPOS_META = new Set(['isVip','nickname','bio','avatar','banner','email','photoURL','xp','nivel','ultimoComentario']);
+
+  const btnLogin      = document.getElementById('btn-login');
+  const userPhotoImg  = document.getElementById('user-photo');
+  const avatarInicial = document.getElementById('avatar-inicial');
+  const dropAvatar    = document.getElementById('drop-avatar');
+  const dropMenu      = document.getElementById('drop-menu');
+  const btnLogout     = document.getElementById('btn-logout');
+  const menuUserHello = document.getElementById('menu-user-hello');
+  const dropNivel     = document.getElementById('drop-nivel');
+  const dropXpBar     = document.getElementById('drop-xp-bar');
+  const dropXpPct     = document.getElementById('drop-xp-pct');
+  const toast         = document.getElementById('toast');
+  const toggle        = document.getElementById('toggle-theme');
+  const searchInput   = document.getElementById('search-input');
+  const btnSearch     = document.getElementById('btn-search');
+  const catBtns       = document.querySelectorAll('.cat-btn');
+  const cards         = document.querySelectorAll('.card');
+  const btnNotif      = document.getElementById('btn-notif');
+  const notifDropdown = document.getElementById('notif-dropdown');
+  const notifBadge    = document.getElementById('notif-badge');
+  const notifLista    = document.getElementById('notif-lista');
+  const btnMarcarLidas= document.getElementById('btn-marcar-lidas');
+
+  let currentCategory = 'all';
+  let searchTerm = '';
+  let notifSnap = null;
+
+  function showToast(msg, ms = 3500) {
+    toast.textContent = msg; toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), ms);
+  }
+
+  function calcNivel(xp) { return { nivel: Math.floor(xp / 100) + 1, pct: xp % 100 }; }
+
+  function atualizarDropXP(xp) {
+    const { nivel, pct } = calcNivel(xp);
+    dropNivel.textContent = `⚡ Nível ${nivel} — ${xp} XP`;
+    setTimeout(() => { dropXpBar.style.width = pct + '%'; dropXpPct.textContent = pct + '%'; }, 200);
+  }
+
+  toggle.addEventListener('click', () => {
+    document.body.classList.toggle('light');
+    toggle.textContent = document.body.classList.contains('light') ? '🌞' : '🌙';
+  });
+
+  btnSearch.addEventListener('click', () => {
+    searchInput.classList.toggle('open');
+    if (searchInput.classList.contains('open')) searchInput.focus();
+    else { searchInput.value = ''; searchTerm = ''; filterGames(); }
+  });
+
+  function filterGames() {
+    cards.forEach(card => {
+      const title    = card.querySelector('.card-title').textContent.toLowerCase();
+      const category = card.dataset.category;
+      const okCat    = currentCategory === 'all' || category === currentCategory;
+      const okSearch = title.includes(searchTerm);
+      card.style.display = (okCat && okSearch) ? 'flex' : 'none';
+    });
+  }
+
+  catBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      catBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCategory = btn.dataset.category;
+      filterGames();
+    });
+  });
+
+  searchInput.addEventListener('input', e => { searchTerm = e.target.value.toLowerCase(); filterGames(); });
+
+  // Login
+  btnLogin.addEventListener('click', () => {
+    if (auth.currentUser) {
+      dropMenu.classList.toggle('show');
+      btnLogin.classList.toggle('open');
+      notifDropdown.classList.remove('show');
+    } else {
+      window.location.href = 'login.html';
+    }
+  });
+
+  // Notificações
+  btnNotif.addEventListener('click', (e) => {
+    e.stopPropagation();
+    notifDropdown.classList.toggle('show');
+    dropMenu.classList.remove('show');
+    btnLogin.classList.remove('open');
+  });
+
+  window.addEventListener('click', e => {
+    if (!btnLogin.contains(e.target) && !dropMenu.contains(e.target)) {
+      dropMenu.classList.remove('show'); btnLogin.classList.remove('open');
+    }
+    if (!btnNotif.contains(e.target) && !notifDropdown.contains(e.target)) {
+      notifDropdown.classList.remove('show');
+    }
+  });
+
+  btnLogout.addEventListener('click', () => {
+    if (confirm("Deseja sair da conta?")) { signOut(auth); dropMenu.classList.remove('show'); }
+  });
+
+  // Marcar todas notificações como lidas
+  btnMarcarLidas.addEventListener('click', async () => {
+    const user = auth.currentUser;
+    if (!user || !notifSnap) return;
+    const batch = writeBatch(db);
+    notifSnap.forEach(d => {
+      if (!d.data().lida) batch.update(d.ref, { lida: true });
+    });
+    await batch.commit();
+  });
+
+  // Auth state
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const docSnap = await getDoc(doc(db, "usuarios", user.uid));
+      let nome = user.displayName ? user.displayName.split(' ')[0] : 'Jogador';
+      let fotoSrc = user.photoURL || '';
+
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        if (d.nickname) nome = d.nickname;
+        if (d.avatar) fotoSrc = d.avatar;
+        if (d.isVip) menuUserHello.classList?.add?.('vip-name');
+        menuUserHello.textContent = d.isVip ? `${nome} 💎` : `Olá, ${nome}!`;
+        atualizarDropXP(d.xp || 0);
+        Object.keys(d).forEach(id => {
+          if (CAMPOS_META.has(id)) return;
+          localStorage.setItem('fav-' + id, d[id]);
+          const btn = document.querySelector(`[data-id="${id}"] .fav-btn`);
+          if (btn) { btn.classList.toggle('active', d[id]); btn.innerHTML = d[id] ? '❤️' : '🤍'; }
+        });
+      } else {
+        menuUserHello.textContent = `Olá, ${nome}!`;
+        atualizarDropXP(0);
+      }
+
+      if (fotoSrc) {
+        userPhotoImg.src = fotoSrc; userPhotoImg.style.display = 'block';
+        dropAvatar.src = fotoSrc;
+        avatarInicial.style.display = 'none';
+      } else {
+        avatarInicial.textContent = nome[0].toUpperCase();
+        avatarInicial.style.display = 'flex';
+      }
+
+      // ── Notificações em tempo real ──────────────────────────────
+      const qNotif = query(
+        collection(db, "notificacoes", user.uid, "lista"),
+        orderBy("createdAt", "desc"),
+        limit(20)
+      );
+
+      onSnapshot(qNotif, (snap) => {
+        notifSnap = snap;
+        const naoLidas = snap.docs.filter(d => !d.data().lida).length;
+
+        // Badge
+        if (naoLidas > 0) {
+          notifBadge.textContent = naoLidas > 9 ? '9+' : naoLidas;
+          notifBadge.classList.add('show');
+        } else {
+          notifBadge.classList.remove('show');
+        }
+
+        // Lista
+        if (snap.empty) {
+          notifLista.innerHTML = "<div class='notif-vazio'>Nenhuma notificação ainda.</div>";
+          return;
+        }
+
+        notifLista.innerHTML = '';
+        snap.forEach(docSnap => {
+          const d = docSnap.data();
+          const tempo = d.createdAt
+            ? new Date(d.createdAt.seconds * 1000).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+            : 'agora';
+
+          const item = document.createElement('div');
+          item.className = `notif-item ${!d.lida ? 'nao-lida' : ''}`;
+          item.innerHTML = `
+            <img class="notif-avatar" src="${d.avatarDe || ''}" onerror="this.style.display='none'" alt="">
+            <div>
+              <div class="notif-texto"><strong>${d.de || 'Alguém'}</strong> ${d.mensagem?.replace(d.de, '') || 'interagiu com você'}</div>
+              <div class="notif-tempo">${tempo}</div>
+            </div>`;
+
+          // Marcar como lida ao clicar
+          item.addEventListener('click', () => {
+            if (!d.lida) updateDoc(docSnap.ref, { lida: true });
+          });
+
+          notifLista.appendChild(item);
+        });
+      });
+
+    } else {
+      menuUserHello.textContent = "Olá!";
+      userPhotoImg.style.display = "none";
+      avatarInicial.style.display = 'none';
+      dropNivel.textContent = "⚡ Nível 1 — 0 XP";
+      dropXpBar.style.width = '0%';
+      dropXpPct.textContent = '0%';
+      notifBadge.classList.remove('show');
+      notifLista.innerHTML = "<div class='notif-vazio'>Faça login para ver notificações.</div>";
+    }
+  });
+
+  // Favoritos
+  cards.forEach(card => {
+    const gameId = card.dataset.id;
+    if (card.classList.contains('futuro-jogo')) return;
+    const favBtn = card.querySelector('.fav-btn');
+    if (!favBtn) return;
+    if (localStorage.getItem('fav-' + gameId) === 'true') { favBtn.classList.add('active'); favBtn.innerHTML = '❤️'; }
+    favBtn.addEventListener('click', async () => {
+      if (!auth.currentUser) { showToast('🔒 Faça login para guardar seus favoritos!'); return; }
+      const isFav = favBtn.classList.toggle('active');
+      favBtn.innerHTML = isFav ? '❤️' : '🤍';
+      localStorage.setItem('fav-' + gameId, isFav);
+      await setDoc(doc(db, "usuarios", auth.currentUser.uid), { [gameId]: isFav }, { merge: true });
+      favBtn.animate([{ transform:'scale(1)' }, { transform:'scale(1.4)' }, { transform:'scale(1)' }], { duration: 250 });
+    });
+  });
+</script>
 </body>
 </html>
