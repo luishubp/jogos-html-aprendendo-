@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙️ Configurações — Hub Jogos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --laranja: #f97316; --laranja-vivo: #fb923c; --laranja-escuro: #ea580c;
+    --laranja-glow: rgba(249,115,22,0.3); --fundo: #0a0a0a; --fundo2: #111111;
+    --fundo3: #1a1a1a; --borda: #2a2a2a; --texto: #f1f0ef; --texto-muted: #6b6b6b;
+    --verde: #22c55e; --vermelho: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Barlow', sans-serif; background: var(--fundo); color: var(--texto); min-height: 100vh; }
+  a { color: inherit; }
+
+  .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; flex-shrink: 0; }
+
+  header { position: fixed; top: 0; left: 0; width: 100%; background: rgba(10,10,10,0.97); backdrop-filter: blur(14px); border-bottom: 1px solid var(--borda); z-index: 1000; height: 58px; display: flex; align-items: center; padding: 0 24px; gap: 12px; }
+  .logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--texto); text-decoration: none; display: flex; align-items: center; gap: 6px; }
+  .logo span { color: var(--laranja); }
+  .voltar { margin-left: auto; display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; background: var(--fundo3); border: 1px solid var(--borda); color: var(--texto-muted); font-size: 13px; font-weight: 600; text-decoration: none; transition: border-color 0.2s, color 0.2s; }
+  .voltar:hover { border-color: var(--laranja); color: var(--texto); }
+
+  .container { padding: 88px 20px 60px; max-width: 800px; margin: 0 auto; }
+
+  .topo { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+  .topo-icon { width: 46px; height: 46px; border-radius: 12px; background: var(--fundo3); border: 1px solid var(--borda); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .topo-icon .icon { width: 22px; height: 22px; color: #ccc; }
+  .topo h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.6rem; font-weight: 900; text-transform: uppercase; }
+  .topo p { color: var(--texto-muted); font-size: 13px; }
+
+  .abas { display: flex; align-items: center; gap: 4px; background: var(--fundo2); border: 1px solid var(--borda); border-radius: 12px; padding: 6px; margin-bottom: 20px; overflow-x: auto; }
+  .aba-btn { display: flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; background: none; border: none; color: var(--texto-muted); font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s, color 0.2s; }
+  .aba-btn:hover { color: var(--texto); }
+  .aba-btn.active { background: var(--fundo3); color: var(--texto); }
+  .aba-btn .icon { width: 16px; height: 16px; }
+
+  .painel { display: none; flex-direction: column; gap: 16px; }
+  .painel.show { display: flex; }
+
+  .bloco { background: var(--fundo2); border: 1px solid var(--borda); border-radius: 14px; padding: 20px; }
+  .bloco h2 { font-size: 15px; font-weight: 800; margin-bottom: 3px; }
+  .bloco .sub { color: var(--texto-muted); font-size: 12.5px; margin-bottom: 16px; }
+
+  .campo { margin-bottom: 14px; }
+  .campo:last-child { margin-bottom: 0; }
+  .campo label { display: block; font-size: 12.5px; color: var(--texto-muted); font-weight: 600; margin-bottom: 6px; }
+  .campo-linha { position: relative; display: flex; align-items: center; }
+  .campo input, .campo textarea { width: 100%; background: var(--fundo3); border: 1px solid var(--borda); border-radius: 8px; padding: 11px 12px; color: var(--texto); font-family: 'Barlow', sans-serif; font-size: 14px; transition: border-color 0.2s; }
+  .campo input:focus, .campo textarea:focus { outline: none; border-color: var(--laranja); }
+  .campo textarea { resize: vertical; min-height: 80px; }
+  .campo input:disabled { color: var(--texto-muted); cursor: not-allowed; }
+  .campo-acao { position: absolute; right: 10px; background: none; border: none; color: var(--laranja); font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .campo-toggle-olho { position: absolute; right: 12px; background: none; border: none; color: var(--texto-muted); cursor: pointer; display: flex; }
+  .contador { text-align: right; font-size: 11px; color: var(--texto-muted); margin-top: 4px; }
+
+  .btn { width: 100%; padding: 12px 18px; border-radius: 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 900; text-transform: uppercase; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s, transform 0.1s; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primario { background: #ccc; color: #000; }
+  .btn-secundario { background: var(--fundo3); color: var(--texto); border: 1px solid var(--borda); }
+  .btn-perigo { background: rgba(239,68,68,0.1); color: var(--vermelho); border: 1px solid rgba(239,68,68,0.3); }
+  .btn-perigo:hover { background: rgba(239,68,68,0.18); }
+  .btn .icon { width: 16px; height: 16px; }
+
+  .aviso { display: flex; gap: 10px; background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.25); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; color: #fdba8c; line-height: 1.5; margin-bottom: 14px; }
+  .aviso .icon { width: 16px; height: 16px; color: var(--laranja); flex-shrink: 0; margin-top: 1px; }
+
+  .conta-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; background: var(--fundo3); border: 1px solid var(--borda); margin-bottom: 10px; }
+  .conta-item:last-child { margin-bottom: 0; }
+  .conta-item.conectada { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.3); }
+  .conta-icone { width: 34px; height: 34px; border-radius: 50%; background: var(--fundo2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .conta-info { flex: 1; }
+  .conta-info p { font-size: 13.5px; font-weight: 700; }
+  .conta-info small { font-size: 11.5px; color: var(--texto-muted); }
+  .conta-item.conectada .conta-info small { color: var(--verde); }
+  .btn-mini { padding: 7px 14px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--borda); background: var(--fundo2); color: var(--texto); white-space: nowrap; }
+  .btn-mini.desvincular { color: var(--vermelho); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); }
+
+  .zona-perigo { border-color: rgba(239,68,68,0.35); }
+  .zona-perigo h2 { color: var(--vermelho); }
+
+  .avatar-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .avatar-grande { width: 100px; height: 100px; border-radius: 50%; background: var(--fundo3); border: 2px solid var(--borda); display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--texto-muted); font-size: 12px; }
+  .avatar-grande img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .avatar-arroba { color: var(--texto-muted); font-size: 12.5px; }
+
+  .switch-linha { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 10px; background: var(--fundo3); border: 1px solid var(--borda); }
+  .switch-linha .icon-wrap { width: 34px; height: 34px; border-radius: 8px; background: var(--fundo2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--laranja); }
+  .switch-info { flex: 1; }
+  .switch-info p { font-size: 13.5px; font-weight: 700; }
+  .switch-info small { font-size: 11.5px; color: var(--texto-muted); }
+  .switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-track { position: absolute; inset: 0; background: var(--borda); border-radius: 99px; cursor: pointer; transition: background 0.2s; }
+  .switch-track::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+  .switch input:checked + .switch-track { background: var(--laranja); }
+  .switch input:checked + .switch-track::before { transform: translateX(18px); }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--fundo3); border: 1px solid var(--borda); color: var(--texto); padding: 12px 20px; border-radius: 10px; font-size: 13.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 3000; box-shadow: 0 8px 24px rgba(0,0,0,0.4); max-width: 90vw; text-align: center; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  body.light { background: #f5f5f5; color: #111; }
+  body.light header { background: rgba(255,255,255,0.97); border-color: #e0e0e0; }
+  body.light .voltar, body.light .btn-secundario { background: #f0f0f0; border-color: #ddd; color: #333; }
+  body.light .abas, body.light .bloco, body.light .conta-item, body.light .switch-linha { background: #fff; border-color: #e5e5e5; }
+  body.light .campo input, body.light .campo textarea, body.light .avatar-grande, body.light .icon-wrap, body.light .conta-icone { background: #f5f5f5; color: #111; }
+  body.light .aba-btn.active { background: #f0f0f0; }
+
+  @media (max-width: 480px) {
+    .topo h1 { font-size: 1.35rem; }
+    .aba-btn span { display: none; }
+    .aba-btn { padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo"><span>🎮</span> HUB<span>JOGOS</span></a>
+  <a href="index.html" class="voltar"><svg class="icon"><use href="#icon-x"/></svg> Fechar</a>
+</header>
+
+<div class="container">
+  <div class="topo">
+    <div class="topo-icon"><svg class="icon"><use href="#icon-settings"/></svg></div>
+    <div>
+      <h1>Configurações</h1>
+      <p>Personalize sua experiência</p>
+    </div>
+  </div>
+
+  <div class="abas">
+    <button class="aba-btn active" data-aba="perfil"><svg class="icon"><use href="#icon-user"/></svg> <span>Perfil</span></button>
+    <button class="aba-btn" data-aba="seguranca"><svg class="icon"><use href="#icon-shield"/></svg> <span>Segurança</span></button>
+    <button class="aba-btn" data-aba="aparencia"><svg class="icon"><use href="#icon-sun"/></svg> <span>Aparência</span></button>
+    <button class="aba-btn" data-aba="notificacoes"><svg class="icon"><use href="#icon-bell"/></svg> <span>Notificações</span></button>
+  </div>
+
+  <!-- ─────────── PERFIL ─────────── -->
+  <div class="painel show" id="painel-perfil">
+    <div class="bloco">
+      <div class="avatar-wrap">
+        <div class="avatar-grande" id="avatar-preview" style="cursor:pointer" title="Clique pra trocar">Avatar</div>
+        <span class="avatar-arroba" id="perfil-tag-preview">@usuario</span>
+        <button class="btn-mini" id="btn-trocar-foto">📷 Alterar foto</button>
+        <input type="file" id="input-avatar" accept="image/*" style="display:none">
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2>Informações do Perfil</h2>
+      <p class="sub">Como os outros jogadores veem você</p>
+
+      <div class="campo">
+        <label>Nome de Exibição</label>
+        <input type="text" id="input-nome" maxlength="30" placeholder="Seu nome">
+      </div>
+
+      <div class="campo">
+        <label>Nome de usuário</label>
+        <div class="campo-linha">
+          <span style="position:absolute;left:12px;color:var(--texto-muted);font-size:14px;pointer-events:none">@</span>
+          <input type="text" id="input-username" maxlength="20" placeholder="seu.usuario" style="padding-left:26px">
+        </div>
+        <div class="contador" style="text-align:left">Você pode trocar seu nome de usuário a cada 7 dias.</div>
+      </div>
+
+      <div class="campo">
+        <label>Bio</label>
+        <textarea id="input-bio" maxlength="500" placeholder="Conte um pouco sobre você..."></textarea>
+        <div class="contador"><span id="bio-count">0</span>/500</div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <div class="campo">
+        <label>URL do Avatar</label>
+        <input type="text" id="input-avatar-url" placeholder="https://...">
+      </div>
+    </div>
+
+    <div class="bloco">
+      <div class="switch-linha">
+        <div class="icon-wrap" id="icon-privacidade"><svg class="icon"><use href="#icon-globe"/></svg></div>
+        <div class="switch-info">
+          <p>Perfil Privado</p>
+          <small>Qualquer um pode ver seu perfil</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggle-perfil-privado">
+          <span class="switch-track"></span>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-primario" id="btn-salvar-perfil"><svg class="icon"><use href="#icon-bolt"/></svg> Salvar alterações</button>
+  </div>
+
+  <!-- ─────────── SEGURANÇA ─────────── -->
+  <div class="painel" id="painel-seguranca">
+    <div class="bloco">
+      <h2>Informações da Conta</h2>
+      <p class="sub">Seus dados básicos de acesso</p>
+
+      <div class="campo">
+        <label>Username</label>
+        <input type="text" id="seg-username" disabled>
+      </div>
+
+      <div class="campo">
+        <label>Email</label>
+        <div class="campo-linha">
+          <input type="email" id="seg-email" disabled style="padding-right:70px">
+          <button class="campo-acao" id="btn-alterar-email">Alterar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2>Redefinir Senha</h2>
+      <p class="sub">Esqueceu sua senha? Envie um link de redefinição para seu email</p>
+      <button class="btn btn-secundario" id="btn-reset-senha"><svg class="icon"><use href="#icon-lock"/></svg> Enviar Link de Redefinição</button>
+    </div>
+
+    <div class="bloco">
+      <h2>Contas Conectadas</h2>
+      <p class="sub">Vincule suas contas para fazer login mais rápido</p>
+      <div class="aviso">
+        <svg class="icon"><use href="#icon-shield"/></svg>
+        Ao vincular sua conta Discord ou Google, você pode entrar mais rápido. Suas credenciais ficam com o provedor — não temos acesso à sua senha.
+      </div>
+      <div class="conta-item" id="conta-discord">
+        <div class="conta-icone"><svg class="icon"><use href="#icon-message"/></svg></div>
+        <div class="conta-info"><p>Discord</p><small>Não conectado</small></div>
+        <button class="btn-mini" data-provider="discord">Conectar</button>
+      </div>
+      <div class="conta-item" id="conta-google">
+        <div class="conta-icone"><svg class="icon"><use href="#icon-user"/></svg></div>
+        <div class="conta-info"><p>Google</p><small>Não conectado</small></div>
+        <button class="btn-mini" data-provider="google">Conectar</button>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2>Alterar Senha</h2>
+      <p class="sub">Mantenha sua conta segura com uma senha forte</p>
+
+      <div class="campo">
+        <label>Nova Senha</label>
+        <div class="campo-linha">
+          <input type="password" id="nova-senha" placeholder="Digite a nova senha" style="padding-right:40px">
+          <button class="campo-toggle-olho" data-alvo="nova-senha">👁</button>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Confirmar Nova Senha</label>
+        <div class="campo-linha">
+          <input type="password" id="confirma-senha" placeholder="Confirme a nova senha" style="padding-right:40px">
+          <button class="campo-toggle-olho" data-alvo="confirma-senha">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-secundario" id="btn-alterar-senha" style="margin-top:4px"><svg class="icon"><use href="#icon-lock"/></svg> Alterar Senha</button>
+    </div>
+
+    <div class="bloco zona-perigo">
+      <h2>Zona de Perigo</h2>
+      <p class="sub">Ações irreversíveis para sua conta</p>
+      <button class="btn btn-perigo" id="btn-excluir-conta"><svg class="icon"><use href="#icon-x"/></svg> Excluir Conta</button>
+    </div>
+  </div>
+
+  <!-- ─────────── APARÊNCIA ─────────── -->
+  <div class="painel" id="painel-aparencia">
+    <div class="bloco">
+      <h2>Tema</h2>
+      <p class="sub">Escolha entre claro ou escuro</p>
+      <div class="switch-linha">
+        <div class="icon-wrap"><svg class="icon" id="tema-icone"><use href="#icon-moon"/></svg></div>
+        <div class="switch-info">
+          <p>Modo Escuro</p>
+          <small>Alterna a aparência de todo o site</small>
+        </div>
+        <label class="switch"><input type="checkbox" id="switch-tema"><span class="switch-track"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── NOTIFICAÇÕES ─────────── -->
+  <div class="painel" id="painel-notificacoes">
+    <div class="bloco">
+      <h2>Notificações</h2>
+      <p class="sub">Avisos de favoritos, XP e novidades do site</p>
+      <div class="switch-linha">
+        <div class="icon-wrap"><svg class="icon"><use href="#icon-bell"/></svg></div>
+        <div class="switch-info">
+          <p>Ativar Notificações</p>
+          <small>Desligar aqui silencia todos os avisos</small>
+        </div>
+        <label class="switch"><input type="checkbox" id="switch-notif" checked><span class="switch-track"></span></label>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<svg style="display:none">
+  <symbol id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="icon-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="icon-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></symbol>
+  <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="icon-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/></symbol>
+  <symbol id="icon-message" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></symbol>
+  <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
+  <symbol id="icon-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="icon-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4.5 8-11.8A8 8 0 0 0 4 10.2C4 17.5 12 22 12 22Z"/><path d="M9.5 12l1.8 1.8L15 10"/></symbol>
+  <symbol id="icon-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 12L2 9Z"/><path d="M2 9h20M12 3v18M8 3l4 6-4 12M16 3l-4 6 4 12"/></symbol>
+</svg>
+
+<script type="module">
+  import { supabase } from './js/supabaseClient.js';
+  import { requireAuth } from './js/auth.js';
+  import { showToast, hideToast } from './js/toast.js';
+  import { resizarImagem } from './js/imagem.js';
+
+  // ── Abas ───────────────────────────────────────────────────────────────
+  document.querySelectorAll('.aba-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.aba-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.painel').forEach(p => p.classList.remove('show'));
+      btn.classList.add('active');
+      document.getElementById('painel-' + btn.dataset.aba).classList.add('show');
+    });
+  });
+
+  // ── Tema (compartilhado com o resto do site via localStorage) ───────────
+  const switchTema = document.getElementById('switch-tema');
+  const temaIcone = document.getElementById('tema-icone');
+  function aplicarTema(claro) {
+    document.body.classList.toggle('light', claro);
+    temaIcone.innerHTML = claro ? '<use href="#icon-sun"/>' : '<use href="#icon-moon"/>';
+    switchTema.checked = !claro; // "Modo Escuro" ligado = não-claro
+  }
+  aplicarTema(localStorage.getItem('tema') === 'light');
+  switchTema.addEventListener('change', () => {
+    const claro = !switchTema.checked;
+    localStorage.setItem('tema', claro ? 'light' : 'dark');
+    aplicarTema(claro);
+  });
+
+  // ── Notificações (liga/desliga geral, salvo local) ───────────────────────
+  const switchNotif = document.getElementById('switch-notif');
+  switchNotif.checked = localStorage.getItem('notif-ativas') !== 'false';
+  switchNotif.addEventListener('change', () => {
+    localStorage.setItem('notif-ativas', switchNotif.checked);
+    showToast(switchNotif.checked ? '🔔 Notificações ativadas' : '🔕 Notificações desativadas');
+  });
+
+  // ── Contador de texto (bio) ───────────────────────────────────────────
+  const inputBio = document.getElementById('input-bio');
+  const bioCount = document.getElementById('bio-count');
+  inputBio.addEventListener('input', () => bioCount.textContent = inputBio.value.length);
+
+  // ── Mostrar/ocultar senha ────────────────────────────────────────────────
+  document.querySelectorAll('.campo-toggle-olho').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const alvo = document.getElementById(btn.dataset.alvo);
+      alvo.type = alvo.type === 'password' ? 'text' : 'password';
+    });
+  });
+
+  // ── Sessão / carregar dados do usuário ───────────────────────────────────
+  let currentUser = null;
+  // Fonte única da verdade pro avatar (base64 de upload OU url colada) —
+  // upload e campo de URL só mexem aqui, nunca direto na coluna do banco
+  // sem passar por essa variável. Evita um sobrescrever o outro sem querer.
+  let avatarAtual = '';
+
+  async function carregarUsuario(user) {
+    currentUser = user;
+
+    document.getElementById('seg-email').value = user.email || '';
+
+    const { data: perfil } = await supabase.from('usuarios').select('*').eq('id', user.id).maybeSingle();
+    const nomeFallback = user.user_metadata?.full_name?.split(' ')[0] || user.user_metadata?.name || user.email?.split('@')[0] || 'Jogador';
+    document.getElementById('seg-username').value = perfil?.username || '(sem usuário definido)';
+    document.getElementById('input-username').value = perfil?.username || '';
+    usernameAlteradoEm = perfil?.username_alterado_em || null;
+
+    document.getElementById('input-nome').value = perfil?.nickname || nomeFallback;
+    document.getElementById('input-bio').value = perfil?.bio || '';
+    bioCount.textContent = (perfil?.bio || '').length;
+    document.getElementById('perfil-tag-preview').textContent = '@' + (perfil?.username || 'usuario');
+    document.getElementById('toggle-perfil-privado').checked = !!perfil?.privado;
+    atualizarCorPrivacidade();
+
+    const avatarUrl = perfil?.avatar || user.user_metadata?.avatar_url;
+    avatarAtual = perfil?.avatar || user.user_metadata?.avatar_url || '';
+    // O campo "URL do Avatar" só mostra algo se for mesmo uma URL http(s) —
+    // um base64 de upload não entra aqui (evita string gigante ilegível no campo).
+    document.getElementById('input-avatar-url').value = /^https?:\/\//.test(avatarAtual) ? avatarAtual : '';
+    if (avatarUrl) {
+      const img = document.createElement('img');
+      img.src = avatarUrl;
+      img.onload = () => { document.getElementById('avatar-preview').innerHTML = ''; document.getElementById('avatar-preview').appendChild(img); img.style.display = 'block'; };
+    }
+
+    // Contas conectadas (Discord / Google) via identities
+    atualizarContasConectadas(user.identities || []);
+  }
+  const usuarioInicial = await requireAuth('index.html');
+  carregarUsuario(usuarioInicial);
+
+  // ── Cor do ícone de privacidade: vermelho se privado, verde se público ────
+  function atualizarCorPrivacidade() {
+    const privado = document.getElementById('toggle-perfil-privado').checked;
+    document.getElementById('icon-privacidade').style.color = privado ? '#ef4444' : '#22c55e';
+  }
+  document.getElementById('toggle-perfil-privado').addEventListener('change', atualizarCorPrivacidade);
+
+  // ── Preview do avatar em tempo real ao colar a URL ─────────────────────────
+  document.getElementById('input-avatar-url').addEventListener('input', () => {
+    const url = document.getElementById('input-avatar-url').value.trim();
+    const preview = document.getElementById('avatar-preview');
+    if (!url) { avatarAtual = ''; preview.innerHTML = 'Avatar'; return; }
+    if (!/^https?:\/\//.test(url)) { preview.innerHTML = 'URL inválida (precisa começar com http:// ou https://)'; return; }
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.display = 'block';
+    img.onload = () => { avatarAtual = url; preview.innerHTML = ''; preview.appendChild(img); };
+    img.onerror = () => { preview.innerHTML = 'URL inválida'; };
+  });
+
+  // ── Atualiza visualmente os blocos de conta conectada (Discord/Google) ────
+  // Função separada pra poder chamar tanto no carregamento quanto logo após
+  // vincular/desvincular, sem depender só de um reload da página.
+  function atualizarContasConectadas(identities) {
+    ['discord', 'google'].forEach(provider => {
+      const bloco = document.getElementById('conta-' + provider);
+      if (!bloco) return;
+      const conectado = identities.some(id => id.provider === provider);
+      bloco.classList.toggle('conectada', conectado);
+      bloco.querySelector('small').textContent = conectado ? 'Conectado' : 'Não conectado';
+      const btn = bloco.querySelector('button');
+      btn.textContent = conectado ? 'Desvincular' : 'Conectar';
+      btn.classList.toggle('desvincular', conectado);
+    });
+  }
+
+  // ── Salvar perfil ─────────────────────────────────────────────────────
+  let usernameAlteradoEm = null; // preenchido em carregarUsuario()
+  document.getElementById('btn-salvar-perfil').addEventListener('click', async () => {
+    if (!currentUser) return;
+    const btn = document.getElementById('btn-salvar-perfil');
+    const username = document.getElementById('input-username').value.trim().toLowerCase();
+    if (username && !/^[a-z0-9._]{3,20}$/.test(username)) {
+      showToast('⚠️ Usuário deve ter 3-20 caracteres: letras, números, ponto ou underline.');
+      return;
+    }
+    if (username && usernameAlteradoEm) {
+      const diasDesdeTroca = (Date.now() - new Date(usernameAlteradoEm).getTime()) / 86400000;
+      if (diasDesdeTroca < 7 && username !== document.getElementById('seg-username').value) {
+        showToast(`⚠️ Espere mais ${Math.ceil(7 - diasDesdeTroca)} dia(s) para trocar de usuário de novo.`);
+        return;
+      }
+    }
+    btn.disabled = true;
+    showToast('Salvando...', Infinity);
+    try {
+      const dados = {
+        id: currentUser.id,
+        nickname: document.getElementById('input-nome').value.trim(),
+        bio: document.getElementById('input-bio').value.trim(),
+        avatar: avatarAtual,
+        privado: document.getElementById('toggle-perfil-privado').checked,
+      };
+      if (username) { dados.username = username; dados.username_alterado_em = new Date().toISOString(); }
+      const { error } = await supabase.from('usuarios').upsert(dados);
+      if (error) throw error;
+      hideToast();
+      showToast('✅ Perfil atualizado!');
+    } catch (err) {
+      console.error(err);
+      hideToast();
+      showToast('⚠️ Não deu pra salvar — confira a tabela usuarios no Supabase');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ── Trocar foto (base64 direto na coluna avatar, sem bucket) ─────────────
+  document.getElementById('btn-trocar-foto').addEventListener('click', () => document.getElementById('input-avatar').click());
+  document.getElementById('avatar-preview').addEventListener('click', () => document.getElementById('input-avatar').click());
+  document.getElementById('input-avatar').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file || !currentUser) return;
+    showToast('Enviando foto...', Infinity);
+    const base64 = await resizarImagem(file, 200, 200);
+    avatarAtual = base64;
+    // Limpa o campo de URL — a partir de agora o avatar é o base64 do upload,
+    // não faz sentido mostrar/misturar com uma URL colada antes.
+    document.getElementById('input-avatar-url').value = '';
+    const img = document.createElement('img');
+    img.src = base64;
+    img.style.display = 'block';
+    document.getElementById('avatar-preview').innerHTML = '';
+    document.getElementById('avatar-preview').appendChild(img);
+    const { error } = await supabase.from('usuarios').upsert({ id: currentUser.id, avatar: base64 });
+    hideToast();
+    showToast(error ? '❌ Erro ao salvar avatar.' : '✅ Avatar atualizado!');
+  });
+
+  // ── Alterar email ────────────────────────────────────────────────────────
+  document.getElementById('btn-alterar-email').addEventListener('click', async () => {
+    const novo = prompt('Digite o novo email:');
+    if (!novo) return;
+    const { error } = await supabase.auth.updateUser({ email: novo });
+    if (error) { showToast('⚠️ ' + error.message); return; }
+    showToast('📩 Confirme o novo email na sua caixa de entrada');
+  });
+
+  // ── Reset de senha por email ──────────────────────────────────────────────
+  document.getElementById('btn-reset-senha').addEventListener('click', async () => {
+    if (!currentUser?.email) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(currentUser.email);
+    if (error) { showToast('⚠️ ' + error.message); return; }
+    showToast('📩 Link de redefinição enviado pro seu email');
+  });
+
+  // ── Alterar senha diretamente ─────────────────────────────────────────────
+  document.getElementById('btn-alterar-senha').addEventListener('click', async () => {
+    const nova = document.getElementById('nova-senha').value;
+    const conf = document.getElementById('confirma-senha').value;
+    if (!nova || nova.length < 6) { showToast('⚠️ A senha precisa ter pelo menos 6 caracteres'); return; }
+    if (nova !== conf) { showToast('⚠️ As senhas não coincidem'); return; }
+    const { error } = await supabase.auth.updateUser({ password: nova });
+    if (error) { showToast('⚠️ ' + error.message); return; }
+    document.getElementById('nova-senha').value = '';
+    document.getElementById('confirma-senha').value = '';
+    showToast('✅ Senha alterada com sucesso!');
+  });
+
+  // ── Contas conectadas (Discord / Google) ──────────────────────────────────
+  // Vincular/desvincular acontece sem mostrar mensagens de erro cruas do
+  // Supabase pro usuário — inclusive a trava "precisa ter ao menos 1 identidade",
+  // que continua ativa no Supabase (protege a conta de ficar sem acesso), só
+  // não aparece mais como texto de erro na tela.
+  document.querySelectorAll('[data-provider]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const provider = btn.dataset.provider;
+      if (btn.classList.contains('desvincular')) {
+        if (!confirm(`Desvincular sua conta ${provider}?`)) return;
+        const identidade = currentUser.identities?.find(i => i.provider === provider);
+        if (!identidade) return;
+        const { error } = await supabase.auth.unlinkIdentity(identidade);
+        if (error) return; // trava de segurança do Supabase (ex.: última identidade) — sem aviso
+        const { data: { session } } = await supabase.auth.refreshSession();
+        currentUser = session.user;
+        atualizarContasConectadas(currentUser.identities || []);
+      } else {
+        await supabase.auth.linkIdentity({ provider });
+        // Sucesso redireciona pro provedor automaticamente.
+        // Erro (ex.: provider mal configurado) fica silencioso aqui.
+      }
+    });
+  });
+
+  // ── Excluir conta ─────────────────────────────────────────────────────────
+  document.getElementById('btn-excluir-conta').addEventListener('click', () => {
+    if (!confirm('Essa ação é permanente e não pode ser desfeita. Excluir mesmo assim?')) return;
+    showToast('⚠️ Exclusão precisa ser feita por uma função no servidor (Edge Function) — ainda não configurada');
+  });
+</script>
+</body>
+</html>
